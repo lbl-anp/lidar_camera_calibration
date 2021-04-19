@@ -10,6 +10,7 @@
 #include <pcl/io/pcd_io.h>
 
 #include <ros/package.h>
+#include <ros/node_handle.h>
 
 #include <pcl_ros/point_cloud.h>
 #include <boost/foreach.hpp>
@@ -103,8 +104,13 @@ struct config_settings {
 } config;
 
 void readConfig() {
+    // Get config file path
+    ros::NodeHandle nh;
+    std::string config_file_path;
     std::string pkg_loc = ros::package::getPath("lidar_camera_calibration");
-    //std::cout<< "The conf file location: " << pkg_loc <<"/conf/config_file.txt" << std::endl;
+    nh.param<std::string>("config_file_path", config_file_path, pkg_loc + "/conf/config_file.txt");
+    std::cout<< "lidar_camera_calibration config_file_path: " << config_file_path << std::endl;
+    // Load config
     std::ifstream infile(pkg_loc + "/conf/config_file.txt");
     float left_limit = 0.0, right_limit = 0.0;
     float angle;

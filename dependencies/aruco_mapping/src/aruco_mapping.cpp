@@ -36,28 +36,29 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <aruco_mapping.h>
 #include "lidar_camera_calibration/marker_6dof.h"
+#include <ros/node_handle.h>
 
 namespace aruco_mapping
 {
 
 ArucoMapping::ArucoMapping(ros::NodeHandle *nh) :
-  listener_ (new tf::TransformListener),  // Initialize TF Listener  
+  listener_ (new tf::TransformListener),  // Initialize TF Listener
   num_of_markers_ (10),                   // Number of used markers
   marker_size_(0.1),                      // Marker size in m
   calib_filename_("empty"),               // Calibration filepath
-  space_type_ ("plane"),                  // Space type - 2D plane 
+  space_type_ ("plane"),                  // Space type - 2D plane
   roi_allowed_ (false),                   // ROI not allowed by default
   first_marker_detected_(false),          // First marker not detected by defualt
   lowest_marker_id_(-1),                  // Lowest marker ID
   marker_counter_(0),                     // Reset marker counter
-  closest_camera_index_(0)                // Reset closest camera index 
-  
+  closest_camera_index_(0)                // Reset closest camera index
+
 {
-  double temp_marker_size;  
-  
-  //Parse params from launch file 
+  double temp_marker_size;
+
+  //Parse params from launch file
   nh->getParam("/aruco_mapping/calibration_file", calib_filename_);
-  nh->getParam("/aruco_mapping/marker_size", temp_marker_size); 
+  nh->getParam("/aruco_mapping/marker_size", temp_marker_size);
   nh->getParam("/aruco_mapping/num_of_markers", num_of_markers_);
   nh->getParam("/aruco_maping/space_type",space_type_);
   nh->getParam("/aruco_mapping/roi_allowed",roi_allowed_);
@@ -65,10 +66,10 @@ ArucoMapping::ArucoMapping(ros::NodeHandle *nh) :
   nh->getParam("/aruco_mapping/roi_y",roi_y_);
   nh->getParam("/aruco_mapping/roi_w",roi_w_);
   nh->getParam("/aruco_mapping/roi_h",roi_h_);
-     
+
   // Double to float conversion
   marker_size_ = float(temp_marker_size);
-  
+
   if(calib_filename_ == "empty")
     ROS_WARN("Calibration filename empty! Check the launch file paths");
   else
@@ -81,9 +82,9 @@ ArucoMapping::ArucoMapping(ros::NodeHandle *nh) :
     ROS_INFO_STREAM("ROI x-coor: " << roi_x_);
     ROS_INFO_STREAM("ROI y-coor: " << roi_x_);
     ROS_INFO_STREAM("ROI width: "  << roi_w_);
-    ROS_INFO_STREAM("ROI height: " << roi_h_);      
+    ROS_INFO_STREAM("ROI height: " << roi_h_);
   }
-    
+
   //ROS publishers
   marker_msg_pub_           = nh->advertise<aruco_mapping::ArucoMarker>("aruco_poses",1);
   marker_visualization_pub_ = nh->advertise<visualization_msgs::Marker>("aruco_markers",1);
@@ -93,11 +94,11 @@ ArucoMapping::ArucoMapping(ros::NodeHandle *nh) :
   parseCalibrationFile(calib_filename_);
 
   //Initialize OpenCV window
-  cv::namedWindow("Mono8", cv::WINDOW_AUTOSIZE);       
-      
+  cv::namedWindow("Mono8", cv::WINDOW_AUTOSIZE);
+
   //Resize marker container
   markers_.resize(num_of_markers_);
-  
+
   // Default markers_ initialization
   for(size_t i = 0; i < num_of_markers_;i++)
   {
@@ -171,17 +172,17 @@ ArucoMapping::imageCallback(const sensor_msgs::ImageConstPtr &original_image)
     ROS_ERROR("Not able to convert sensor_msgs::Image to OpenCV::Mat format %s", e.what());
     return;
   }
-  
+
   // sensor_msgs::Image to OpenCV Mat structure
   cv::Mat I = cv_ptr->image;
-  
+
   // region of interest
   if(roi_allowed_==true)
     I = cv_ptr->image(cv::Rect(roi_x_,roi_y_,roi_w_,roi_h_));
 
   //Marker detection
   processImage(I,I);
-  
+
   // Show image
   cv::imshow("Mono8", I);
   cv::waitKey(10);
@@ -205,7 +206,7 @@ ArucoMapping::processImage(cv::Mat input_image,cv::Mat output_image)
 
   // Detect markers
   Detector.detect(input_image,temp_markers,aruco_calib_params_,marker_size_);
-    
+
   // If no marker found, print statement
   if(temp_markers.size() == 0)
     ROS_DEBUG("No marker found!");
@@ -284,8 +285,13 @@ ArucoMapping::processImage(cv::Mat input_image,cv::Mat output_image)
   //------------------------------------------------------
   // FOR EVERY MARKER DO
   //------------------------------------------------------
-  std::string pkg_loc = ros::package::getPath("lidar_camera_calibration") + "/conf/transform.txt";
-  std::ofstream outfile(pkg_loc.c_str(), std::ios_base::trunc);
+  // Get config file path
+  ros::NodeHandle nh;
+  std::string transform_path;
+  std::string pkg_loc = ros::package::getPath("lidar_camera_calibration");
+  nh.param<std::string>("transform_path", transform_path, pkg_loc + "/conf/transform.txt");
+  std::cout<< "lidar_camera_calibration transform_path: " << transform_path << std::endl;
+  std::ofstream outfile(transform_path, std::ios_base::trunc);
 
   lidar_camera_calibration::marker_6dof marker_r_and_t;
 
@@ -344,7 +350,7 @@ ArucoMapping::processImage(cv::Mat input_image,cv::Mat output_image)
     if((index < marker_counter_) && (first_marker_detected_ == true))
     {
       outfile << temp_markers[i] << "\n";
-      marker_r_and_t.dof.data.push_back( temp_markers[i].id ); 
+      marker_r_and_t.dof.data.push_back( temp_markers[i].id );
       marker_r_and_t.dof.data.push_back( temp_markers[i].Tvec.ptr<float>(0)[0] );
       marker_r_and_t.dof.data.push_back( temp_markers[i].Tvec.ptr<float>(0)[1] );
       marker_r_and_t.dof.data.push_back( temp_markers[i].Tvec.ptr<float>(0)[2] );
@@ -373,7 +379,7 @@ ArucoMapping::processImage(cv::Mat input_image,cv::Mat output_image)
     if((index == marker_counter_) && (first_marker_detected_ == true))
     {
       outfile << temp_markers[i] << "\n";
-      marker_r_and_t.dof.data.push_back( temp_markers[i].id ); 
+      marker_r_and_t.dof.data.push_back( temp_markers[i].id );
       marker_r_and_t.dof.data.push_back( temp_markers[i].Tvec.ptr<float>(0)[0] );
       marker_r_and_t.dof.data.push_back( temp_markers[i].Tvec.ptr<float>(0)[1] );
       marker_r_and_t.dof.data.push_back( temp_markers[i].Tvec.ptr<float>(0)[2] );
@@ -646,7 +652,7 @@ ArucoMapping::processImage(cv::Mat input_image,cv::Mat output_image)
       if(markers_[j].visible == true)
       {
         marker_msg.marker_ids.push_back(markers_[j].marker_id);
-        marker_msg.global_marker_poses.push_back(markers_[j].geometry_msg_to_world);       
+        marker_msg.global_marker_poses.push_back(markers_[j].geometry_msg_to_world);
       }
     }
   }

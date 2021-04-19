@@ -12,10 +12,10 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-find_package(catkin 
+find_package(catkin
   REQUIRED COMPONENTS
   std_msgs
-  rospy  
+  rospy
   roscpp
   cv_bridge
   image_transport
@@ -37,14 +37,21 @@ catkin_package(CATKIN_DEPENDS std_msgs velodyne_pointcloud velodyne_pcl
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
-find_package(PCL 1.7 REQUIRED) 
+find_package(PCL 1.7 REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS})
-link_directories(${PCL_LIBRARY_DIRS}) 
-add_definitions(${PCL_DEFINITIONS}) 
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 
-add_executable(find_transform src/find_velodyne_points.cpp src/Corners.cpp) 
-target_link_libraries(find_transform ${PCL_LIBRARIES}) 
+add_executable(find_transform src/find_velodyne_points.cpp src/Corners.cpp)
+target_link_libraries(find_transform ${PCL_LIBRARIES})
 target_link_libraries(find_transform ${catkin_LIBRARIES})
 target_link_libraries(find_transform ${OpenCV_LIBS})
+
+install(DIRECTORY
+    conf
+    params
+    launch
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)

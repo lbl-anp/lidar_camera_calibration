@@ -12,6 +12,9 @@
 #include <Eigen/Geometry>
 #include <unsupported/Eigen/MatrixFunctions>
 
+#include <ros/package.h>
+#include <ros/node_handle.h>
+
 using namespace Eigen;
 
 std::string pkg_loc = ros::package::getPath("lidar_camera_calibration");
@@ -219,6 +222,7 @@ Matrix4d calc_RT(MatrixXd lidar, MatrixXd camera, int MAX_ITERS, Eigen::Matrix3d
 
 void readArucoPose(std::vector<float> marker_info, int num_of_marker_in_config) {
     std::vector <Matrix4d> marker_pose;
+    ros::NodeHandle nh;
 
     ROS_ASSERT(marker_info.size() / 7 == num_of_marker_in_config);
 
@@ -250,9 +254,17 @@ void readArucoPose(std::vector<float> marker_info, int num_of_marker_in_config) 
 
     }
 
+    // Load marker_coordinates
+    std::string marker_coordinates_path;
+    nh.param<std::string>("marker_coordinates_path", marker_coordinates_path, pkg_loc + "/conf/marker_coordinates.txt");
+    std::cout<< "lidar_camera_calibration marker_coordinates_path: " << marker_coordinates_path << std::endl;
+    std::ifstream infile(marker_coordinates_path);
 
-    std::ifstream infile(pkg_loc + "/conf/marker_coordinates.txt");
-    std::ofstream outfile(pkg_loc + "/conf/points.txt", std::ios_base::app);
+    // Load points
+    std::string points_path;
+    nh.param<std::string>("points_path", points_path, pkg_loc + "/conf/points.txt");
+    std::cout<< "lidar_camera_calibration points_path: " << points_path << std::endl;
+    std::ofstream outfile(points_path, std::ios_base::app);
 
     int num_of_markers;
     infile >> num_of_markers;
