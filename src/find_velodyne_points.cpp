@@ -158,8 +158,8 @@ void callback(const sensor_msgs::CameraInfoConstPtr &msg_info,
 
 
 int main(int argc, char **argv) {
-    readConfig();
     ros::init(argc, argv, "find_transform");
+    readConfig();
 
     ros::NodeHandle n;
 
