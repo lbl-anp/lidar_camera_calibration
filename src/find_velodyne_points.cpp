@@ -165,8 +165,8 @@ int main(int argc, char **argv) {
 
     if (config.useCameraInfo) {
         ROS_INFO_STREAM("Reading CameraInfo from topic");
-        n.getParam("/lidar_camera_calibration/camera_info_topic", CAMERA_INFO_TOPIC);
-        n.getParam("/lidar_camera_calibration/velodyne_topic", VELODYNE_TOPIC);
+        n.getParam("camera_info_topic", CAMERA_INFO_TOPIC);
+        n.getParam("velodyne_topic", VELODYNE_TOPIC);
 
         message_filters::Subscriber <sensor_msgs::CameraInfo> info_sub(n, CAMERA_INFO_TOPIC, 1);
         message_filters::Subscriber <sensor_msgs::PointCloud2> cloud_sub(n, VELODYNE_TOPIC, 1);
@@ -181,7 +181,7 @@ int main(int argc, char **argv) {
         ros::spin();
     } else {
         ROS_INFO_STREAM("Reading CameraInfo from configuration file");
-        n.getParam("/lidar_camera_calibration/velodyne_topic", VELODYNE_TOPIC);
+        n.getParam("velodyne_topic", VELODYNE_TOPIC);
 
         message_filters::Subscriber <sensor_msgs::PointCloud2> cloud_sub(n, VELODYNE_TOPIC, 1);
         message_filters::Subscriber <lidar_camera_calibration::marker_6dof> rt_sub(n, "lidar_camera_calibration_rt", 1);
