@@ -1,8 +1,7 @@
-﻿lidar_camera_calibration:
-    camera_frame_topic: /frontNear/left/image_raw
-    camera_info_topic: /frontNear/left/camera_info
-    velodyne_topic: /velodyne_points
-    config_file_path: $(find lidar_camera_calibration)/conf/config_file.txt
-    marker_coordinates_path: $(find lidar_camera_calibration)/conf/marker_coordinates.txt
-    points_path: $(find lidar_camera_calibration)/conf/points.txt
-    transform_path: $(find lidar_camera_calibration)/conf/transform.txt
+﻿camera_frame_topic: /frontNear/left/image_raw
+camera_info_topic: /frontNear/left/camera_info
+velodyne_topic: /velodyne_points
+config_file_path: $(find lidar_camera_calibration)/conf/config_file.txt
+marker_coordinates_path: $(find lidar_camera_calibration)/conf/marker_coordinates.txt
+points_path: $(find lidar_camera_calibration)/conf/points.txt
+transform_path: $(find lidar_camera_calibration)/conf/transform.txt
